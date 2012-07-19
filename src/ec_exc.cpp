@@ -146,7 +146,7 @@ void Ec::handle_exc (Exc_regs *r)
             break;
     }
 
-    if (r->user())
+    if (r->user() && r->cr2 < USER_ADDR)
         send_msg<ret_user_iret>();
 
     die ("EXC", r);
