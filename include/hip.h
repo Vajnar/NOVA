@@ -45,7 +45,7 @@ class Hip_mem
         uint64  addr;
         uint64  size;
         uint32  type;
-        uint32  aux;
+        mword   aux;
 };
 
 class Hip
