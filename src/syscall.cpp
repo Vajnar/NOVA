@@ -64,8 +64,8 @@ void Ec::delegate()
     bool user = C || dst->cont == ret_user_sysexit;
 
     dst->pd->xfer_items (src->pd,
-                         user ? dst->utcb->xlt : Crd (0),
-                         user ? dst->utcb->del : Crd (Crd::MEM, (dst->cont == ret_user_iret ? dst->regs.cr2 : dst->regs.nst_fault) >> PAGE_BITS),
+                         user ? dst->utcb->translate() : Crd (0),
+                         user ? dst->utcb->delegate() : Crd (Crd::MEM, (dst->cont == ret_user_iret ? dst->regs.cr2 : dst->regs.nst_fault) >> PAGE_BITS),
                          src->utcb->xfer(),
                          user ? dst->utcb->xfer() : nullptr,
                          src->utcb->ti());

@@ -60,6 +60,7 @@ void Utcb::load_exc (Cpu_regs *regs)
     barrier();
     mtd = m;
     items = sizeof (Utcb_data) / sizeof (mword);
+    top = bottom = 0;
 }
 
 void Utcb::save_exc (Cpu_regs *regs)
@@ -196,6 +197,7 @@ void Utcb::load_vmx (Cpu_regs *regs)
     barrier();
     mtd = m;
     items = sizeof (Utcb_data) / sizeof (mword);
+    top = bottom = 0;
 }
 
 void Utcb::save_vmx (Cpu_regs *regs)
@@ -438,6 +440,7 @@ void Utcb::load_svm (Cpu_regs *regs)
     barrier();
     mtd = m;
     items = sizeof (Utcb_data) / sizeof (mword);
+    top = bottom = 0;
 }
 
 void Utcb::save_svm (Cpu_regs *regs)

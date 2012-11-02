@@ -46,9 +46,9 @@ class Utcb_segment
 class Utcb_head
 {
     protected:
-        mword items;
-
-    public:
+		uint16  top;
+		uint16  bottom;
+        mword   items;
         Crd     xlt, del;
         mword   tls;
 };
@@ -91,6 +91,22 @@ class Utcb : public Utcb_head, private Utcb_data
     private:
         static mword const words = (PAGE_SIZE - sizeof (Utcb_head)) / sizeof (mword);
 
+        // we use a power of two for performance reasons. Limiting it to 1024-1 words is not sufficient
+        // because then there's only one word left and we need 4 for the header. Thus, we use 512-1
+        // as a limit for bottom. For top we use a even lower limit to ensure that top + bottom <= words
+        // This wastes a bit of space, but it should still be sufficient because it is not expected
+        // to have many frames in the utcb. It shouldn't be much more than 3 in most cases.
+        inline mword boff() const { return bottom & ((PAGE_SIZE / (2 * sizeof(mword))) - 1); }
+		inline mword toff() const { return top & ((PAGE_SIZE / (4 * sizeof(mword))) - 1); }
+        inline Utcb *cur_frame() {
+        	return reinterpret_cast<Utcb*>(reinterpret_cast<mword*>(this) + boff());
+        }
+        inline const Utcb *cur_frame() const {
+        	return reinterpret_cast<const Utcb*>(reinterpret_cast<const mword*>(this) + boff());
+        }
+        ALWAYS_INLINE
+        inline mword maxui() const { return (words - (boff() + toff())) / 1; }
+
     public:
         void load_exc (Cpu_regs *);
         void load_vmx (Cpu_regs *);
@@ -99,29 +115,35 @@ class Utcb : public Utcb_head, private Utcb_data
         void save_vmx (Cpu_regs *);
         void save_svm (Cpu_regs *);
 
-        inline mword ucnt() const { return static_cast<uint16>(items); }
-        inline mword tcnt() const { return static_cast<uint16>(items >> 16); }
+        inline Crd translate() { return cur_frame()->xlt; }
+        inline Crd delegate() { return cur_frame()->del; }
 
-        inline mword ui() const { return min (words / 1, ucnt()); }
-        inline mword ti() const { return min (words / 2, tcnt()); }
+        inline mword ucnt() const { return static_cast<uint16>(cur_frame()->items); }
+        inline mword tcnt() const { return static_cast<uint16>(cur_frame()->items >> 16); }
+
+        inline mword ti() const { return min ((words - (boff() + toff())) / 2, tcnt()); }
+        ALWAYS_INLINE
+        inline mword ui() const { return min (maxui(), ucnt()); }
 
         ALWAYS_INLINE NONNULL
         inline void save (Utcb *dst)
         {
-            register mword n = ui();
+            register mword n = min(dst->maxui(),ui());
+            const Utcb *thiz = cur_frame();
 
-            dst->items = items;
+            dst = dst->cur_frame();
+            dst->items = thiz->items;
 #if 0
             mword *d = dst->mr, *s = mr;
             asm volatile ("rep; movsl" : "+D" (d), "+S" (s), "+c" (n) : : "memory");
 #else
             for (unsigned long i = 0; i < n; i++)
-                dst->mr[i] = mr[i];
+                dst->mr[i] = thiz->mr[i];
 #endif
         }
 
         ALWAYS_INLINE
-        inline Xfer *xfer() { return reinterpret_cast<Xfer *>(this) + PAGE_SIZE / sizeof (Xfer) - 1; }
+        inline Xfer *xfer() { return reinterpret_cast<Xfer *>(this) + PAGE_SIZE / sizeof (Xfer) - (1 + toff() / 2); }
 
         ALWAYS_INLINE
         static inline void *operator new (size_t) { return Buddy::allocator.alloc (0, Buddy::FILL_0); }
