@@ -33,7 +33,7 @@ size_t Vtlb::gwalk (Exc_regs *regs, mword gla, mword &gpa, mword &attr, mword &e
 
     bool pse = regs->cr4_shadow & (Cpu::CR4_PSE | Cpu::CR4_PAE);
     bool pge = regs->cr4_shadow &  Cpu::CR4_PGE;
-    bool wp = regs->cr0_shadow  &  Cpu::CR0_WP;
+    bool wp  = regs->cr0_shadow &  Cpu::CR0_WP;
 
     unsigned lev = max();
 
@@ -57,8 +57,8 @@ size_t Vtlb::gwalk (Exc_regs *regs, mword gla, mword &gpa, mword &attr, mword &e
             continue;
         }
 
-        if (!wp && (~error & ERR_U) && (error & ERR_W))
-            attr = (attr & ~ERR_U) | ERR_W;
+        if (EXPECT_FALSE (!wp && error == ERR_W))
+            attr = (attr & ~TLB_U) | TLB_W;
 
         if (EXPECT_FALSE ((attr & error) != error)) {
             error |= ERR_P;
