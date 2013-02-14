@@ -4,7 +4,7 @@
  * Copyright (C) 2009-2011 Udo Steinberg <udo@hypervisor.org>
  * Economic rights: Technische Universitaet Dresden (Germany)
  *
- * Copyright (C) 2012 Udo Steinberg, Intel Corporation.
+ * Copyright (C) 2012-2013 Udo Steinberg, Intel Corporation.
  *
  * This file is part of the NOVA microhypervisor.
  *
@@ -25,6 +25,7 @@
 #include "regs.h"
 #include "svm.h"
 #include "vmx.h"
+#include "x86.h"
 
 void Utcb::load_exc (Cpu_regs *regs)
 {
@@ -186,8 +187,10 @@ void Utcb::load_vmx (Cpu_regs *regs)
         actv_state = static_cast<uint32>(Vmcs::read (Vmcs::GUEST_ACTV_STATE));
     }
 
-    if (m & Mtd::TSC)
-        tsc = regs->tsc_offset;
+    if (m & Mtd::TSC) {
+        tsc_val = rdtsc();
+        tsc_off = regs->tsc_offset;
+    }
 
 #ifdef __x86_64__
     if (m & Mtd::EFER)
@@ -219,8 +222,12 @@ void Utcb::save_vmx (Cpu_regs *regs)
 
     if (mtd & Mtd::RSP)
         Vmcs::write (Vmcs::GUEST_RSP, rsp);
-    if (mtd & Mtd::RIP_LEN)
+
+    if (mtd & Mtd::RIP_LEN) {
         Vmcs::write (Vmcs::GUEST_RIP, rip);
+        Vmcs::write (Vmcs::ENT_INST_LEN, inst_len);
+    }
+
     if (mtd & Mtd::RFLAGS)
         Vmcs::write (Vmcs::GUEST_RFLAGS, rflags);
 
@@ -328,7 +335,7 @@ void Utcb::save_vmx (Cpu_regs *regs)
     }
 
     if (mtd & Mtd::TSC)
-        regs->add_tsc_offset (tsc);
+        regs->add_tsc_offset (tsc_off);
 
 #ifdef __x86_64__
     if (mtd & Mtd::EFER)
@@ -429,8 +436,10 @@ void Utcb::load_svm (Cpu_regs *regs)
         actv_state = 0;
     }
 
-    if (m & Mtd::TSC)
-        tsc = regs->tsc_offset;
+    if (m & Mtd::TSC) {
+        tsc_val = rdtsc();
+        tsc_off = regs->tsc_offset;
+    }
 
 #ifdef __x86_64__
     if (m & Mtd::EFER)
@@ -534,7 +543,7 @@ void Utcb::save_svm (Cpu_regs *regs)
         vmcb->int_shadow = intr_state;
 
     if (mtd & Mtd::TSC)
-        regs->add_tsc_offset (tsc);
+        regs->add_tsc_offset (tsc_off);
 
 #ifdef __x86_64__
     if (mtd & Mtd::EFER)
