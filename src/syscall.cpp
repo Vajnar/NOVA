@@ -384,6 +384,22 @@ void Ec::sys_lookup()
     sys_finish<Sys_regs::SUCCESS>();
 }
 
+void Ec::sys_pd_ctrl()
+{
+    Sys_pd_ctrl *r = static_cast<Sys_pd_ctrl *>(current->sys_regs());
+
+    Capability cap = Space_obj::lookup (r->pd());
+    if (EXPECT_FALSE (cap.obj()->type() != Kobject::PD)) {
+        trace (TRACE_ERROR, "%s: Bad PD CAP (%#lx)", __func__, r->pd());
+        sys_finish<Sys_regs::BAD_CAP>();
+    }
+
+    Pd *pd = static_cast<Pd *>(cap.obj());
+    pd->set_name(r->name());
+
+    sys_finish<Sys_regs::SUCCESS>();
+}
+
 void Ec::sys_ec_ctrl()
 {
     Sys_ec_ctrl *r = static_cast<Sys_ec_ctrl *>(current->sys_regs());
@@ -547,7 +563,7 @@ void (*const syscall[])() =
     &Ec::sys_sm_ctrl,
     &Ec::sys_assign_pci,
     &Ec::sys_assign_gsi,
-    &Ec::sys_finish<Sys_regs::BAD_HYP>,
+    &Ec::sys_pd_ctrl,
 };
 
 template void Ec::sys_finish<Sys_regs::COM_ABT>();

@@ -28,6 +28,9 @@ void bootstrap()
 {
     static mword barrier;
 
+    Pd::kern.set_name("kernel");
+    Pd::root.set_name("root");
+
     Cpu::init();
 
     // Create idle EC

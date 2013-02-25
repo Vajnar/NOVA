@@ -39,11 +39,20 @@ class Pd : public Kobject, public Refcount, public Space_mem, public Space_pio, 
     public:
         static Pd *current CPULOCAL_HOT;
         static Pd kern, root;
+        char name[9];
 
         INIT
         Pd (Pd *);
 
-        Pd (Pd *own, mword sel, mword a) : Kobject (PD, static_cast<Space_obj *>(own), sel, a) {}
+        Pd (Pd *own, mword sel, mword a) : Kobject (PD, static_cast<Space_obj *>(own), sel, a), name() {}
+
+        ALWAYS_INLINE void set_name(const char *str)
+        {
+            mword i;
+            for(i = 0; str[i] && i < sizeof(name) - 1; ++i)
+                name[i] = str[i];
+            name[i] = '\0';
+        }
 
         ALWAYS_INLINE HOT
         inline void make_current()
