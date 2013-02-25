@@ -68,6 +68,7 @@ class Sys_regs
             BAD_FTR,
             BAD_CPU,
             BAD_DEV,
+            COM_DEADLOCK
         };
 
         ALWAYS_INLINE

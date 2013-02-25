@@ -126,8 +126,14 @@ void Ec::sys_call()
         ec->make_current();
     }
 
-    if (EXPECT_TRUE (!(s->flags() & Sys_call::DISABLE_BLOCKING)))
+    if (EXPECT_TRUE (!(s->flags() & Sys_call::DISABLE_BLOCKING))) {
+        for(Ec *partner = ec; partner != nullptr; partner = partner->partner) {
+            if(partner == current)
+                sys_finish<Sys_regs::COM_DEADLOCK>();
+        }
+
         ec->help (sys_call);
+    }
 
     sys_finish<Sys_regs::COM_TIM>();
 }
