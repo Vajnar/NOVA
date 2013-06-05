@@ -186,13 +186,14 @@ void Console::print (char const *format, ...)
 
 void Console::panic (char const *format, ...)
 {
-    Lock_guard <Spinlock> guard (lock);
+    {   Lock_guard <Spinlock> guard (lock);
 
-    for (Console *c = list; c; c = c->next) {
-        va_list args;
-        va_start (args, format);
-        c->vprintf (format, args);
-        va_end (args);
+        for (Console *c = list; c; c = c->next) {
+            va_list args;
+            va_start (args, format);
+            c->vprintf (format, args);
+            va_end (args);
+        }
     }
 
     shutdown();
