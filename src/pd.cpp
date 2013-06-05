@@ -30,7 +30,7 @@ Pd *Pd::current;
 ALIGNED(32) Pd Pd::kern (&Pd::kern);
 ALIGNED(32) Pd Pd::root (&Pd::root, NUM_EXC, 0x1f);
 
-Pd::Pd (Pd *own) : Kobject (PD, static_cast<Space_obj *>(own))
+Pd::Pd (Pd *own) : Kobject (PD, static_cast<Space_obj *>(own)), name()
 {
     hpt = Hptp (reinterpret_cast<mword>(&PDBR));
 

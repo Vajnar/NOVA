@@ -314,9 +314,11 @@ bool Ec::fixup (mword &eip)
 
 void Ec::die (char const *reason, Exc_regs *r)
 {
-    if (current->utcb || current->pd == &Pd::kern)
-        trace (0, "Killed EC:%p SC:%p V:%#lx CS:%#lx EIP:%#lx CR2:%#lx ERR:%#lx (%s)",
-               current, Sc::current, r->vec, r->cs, r->REG(ip), r->cr2, r->err, reason);
+    if (current->utcb || current->pd == &Pd::kern) {
+        if(r->REG(ip) != USER_ADDR)
+            trace (0, "Killed EC:%p SC:%p V:%#lx CS:%#lx EIP:%#lx CR2:%#lx ERR:%#lx (%s)",
+                   current, Sc::current, r->vec, r->cs, r->REG(ip), r->cr2, r->err, reason);
+    }
     else
         trace (0, "Killed EC:%p SC:%p V:%#lx CR0:%#lx CR3:%#lx CR4:%#lx (%s)",
                current, Sc::current, r->vec, r->cr0_shadow, r->cr3_shadow, r->cr4_shadow, reason);

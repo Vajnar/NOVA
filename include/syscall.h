@@ -133,6 +133,16 @@ class Sys_lookup : public Sys_regs
         inline Crd & crd() { return reinterpret_cast<Crd &>(ARG_2); }
 };
 
+class Sys_pd_ctrl : public Sys_regs
+{
+    public:
+        ALWAYS_INLINE
+        inline unsigned long pd() const { return ARG_1 >> 8; }
+
+        ALWAYS_INLINE
+        inline const char *name() const { return reinterpret_cast<const char*>(ARG_2); }
+};
+
 class Sys_ec_ctrl : public Sys_regs
 {
     public:

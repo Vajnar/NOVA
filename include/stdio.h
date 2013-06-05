@@ -23,14 +23,20 @@
 #include "console.h"
 #include "cpu.h"
 #include "memory.h"
+#include "pd.h"
+#include "hpt.h"
 
-#define trace(T,format,...)                                     \
-do {                                                            \
-    register mword __esp asm ("esp");                           \
-    if (EXPECT_FALSE ((trace_mask & (T)) == (T)))               \
-        Console::print ("[%2ld] " format,                       \
-               ((__esp - 1) & ~PAGE_MASK) == CPU_LOCAL_STCK ?   \
-                Cpu::id : ~0UL, ## __VA_ARGS__);                \
+#define trace(T,format,...)                                                     \
+do {                                                                            \
+    Paddr dummy_p; mword dummy_a;                                               \
+    if (Hptp(Hpt::current()).lookup (CPU_LOCAL_DATA, dummy_p, dummy_a)) {       \
+        register mword __esp asm ("esp");                                       \
+        if (EXPECT_FALSE ((trace_mask & (T)) == (T)))                           \
+            Console::print ("[%8s:%2ld] " format,                               \
+                Pd::current ? Pd::current->name : Pd::kern.name,                \
+                ((__esp - 1) & ~PAGE_MASK) == CPU_LOCAL_STCK ? Cpu::id : ~0UL,  \
+                ## __VA_ARGS__);                                                \
+    }                                                                           \
 } while (0)
 
 /*
