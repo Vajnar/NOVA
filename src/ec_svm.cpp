@@ -4,7 +4,7 @@
  * Copyright (C) 2009-2011 Udo Steinberg <udo@hypervisor.org>
  * Economic rights: Technische Universitaet Dresden (Germany)
  *
- * Copyright (C) 2012 Udo Steinberg, Intel Corporation.
+ * Copyright (C) 2012-2013 Udo Steinberg, Intel Corporation.
  *
  * This file is part of the NOVA microhypervisor.
  *
@@ -18,9 +18,9 @@
  * GNU General Public License version 2 for more details.
  */
 
-#include "ec.h"
-#include "svm.h"
-#include "vtlb.h"
+#include "ec.hpp"
+#include "svm.hpp"
+#include "vtlb.hpp"
 
 uint8 Ec::ifetch (mword virt)
 {
@@ -62,6 +62,9 @@ void Ec::svm_exception (mword reason)
             mword cr2 = static_cast<mword>(current->regs.vmcb->exitinfo2);
 
             switch (Vtlb::miss (&current->regs, cr2, err)) {
+
+                case Vtlb::FAILURE:
+                    die ("vTLB addressing limit exceeded");
 
                 case Vtlb::GPA_HPA:
                     current->regs.nst_error = 0;

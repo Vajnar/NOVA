@@ -4,7 +4,7 @@
  * Copyright (C) 2009-2011 Udo Steinberg <udo@hypervisor.org>
  * Economic rights: Technische Universitaet Dresden (Germany)
  *
- * Copyright (C) 2012 Udo Steinberg, Intel Corporation.
+ * Copyright (C) 2012-2013 Udo Steinberg, Intel Corporation.
  *
  * This file is part of the NOVA microhypervisor.
  *
@@ -18,11 +18,11 @@
  * GNU General Public License version 2 for more details.
  */
 
-#include "counter.h"
-#include "pd.h"
-#include "regs.h"
-#include "stdio.h"
-#include "vtlb.h"
+#include "counter.hpp"
+#include "pd.hpp"
+#include "regs.hpp"
+#include "stdio.hpp"
+#include "vtlb.hpp"
 
 size_t Vtlb::gwalk (Exc_regs *regs, mword gla, mword &gpa, mword &attr, mword &error)
 {
@@ -129,6 +129,9 @@ Vtlb::Reason Vtlb::miss (Exc_regs *regs, mword virt, mword &error)
     }
 
     size_t size = min (gsize, hsize);
+
+    if (EXPECT_FALSE (host + size > ~0U))
+        return FAILURE;
 
     if (gsize > hsize)
         attr |= TLB_F;
