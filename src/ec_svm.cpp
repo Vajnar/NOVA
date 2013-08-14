@@ -59,7 +59,7 @@ void Ec::svm_exception (mword reason)
 
         case 0x4e:          // #PF
             mword err = static_cast<mword>(current->regs.vmcb->exitinfo1);
-            mword cr2 = static_cast<mword>(current->regs.vmcb->exitinfo2);
+            mword cr2 = static_cast<mword>(current->regs.vmcb->exitinfo2) & 0xFFFFFFFF;
 
             switch (Vtlb::miss (&current->regs, cr2, err)) {
 
